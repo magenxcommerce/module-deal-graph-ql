@@ -1,0 +1,49 @@
+# Copyright © Magenx. All rights reserved.
+
+type Query {
+    deals(
+        type: DealType @doc(description: "Restrict the list to a single deal type. Omit for every active deal.")
+        pageSize: Int @doc(description: "How many deal products to return (capped at the store's configured limit).")
+    ): Deals
+        @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Deals")
+        @doc(description: "Products currently on a deal (a standard deal or a first-order offer) — i.e. matched by an active, labelled Catalog Price Rule for the request's website + customer group.")
+}
+
+type Deals @doc(description: "A list of products currently on a deal.") {
+    items: [DealItem!]! @doc(description: "The deal products.")
+    total_count: Int @doc(description: "The number of deal products returned.")
+}
+
+type DealItem @doc(description: "A single product on a deal.") {
+    product: ProductInterface
+        @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\DealProduct")
+        @doc(description: "The deal product. Null if it is no longer available. Its `deal` field carries the rule metadata (label, type, price, schedule).")
+}
+
+interface ProductInterface {
+    deal: DealInfo
+        @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Product\\Deal")
+        @doc(description: "The active deal (a labelled Catalog Price Rule) matched to this product for the request's website + customer group, or null when the product is on no deal (or deals are disabled). Backed by the indexed Catalog Price Rule, so it is safe on listing grids.")
+}
+
+type DealInfo @doc(description: "The deal a product is currently part of, driven by a labelled Catalog Price Rule.") {
+    label: String! @doc(description: "The badge label set on the rule, e.g. \"DEAL\" or \"FLASH SALE\".")
+    type: DealType! @doc(description: "The classification of the deal, set on the rule.")
+    discount_type: String @doc(description: "The rule's discount action normalized to \"percent\" or \"fixed\" (null for \"to fixed/percent\" actions). Informational — use percent_off for display.")
+    discount_value: Float @doc(description: "The rule's discount amount for percent/fixed actions, else null.")
+    regular_price: Float @doc(description: "The product's regular (pre-rule) price in the store currency.")
+    deal_price: Float @doc(description: "The product's actual rule-aware final price in the store currency. This is the authoritative price Magento charges — the Catalog Price Rule is the single source of truth, so no separate advertised figure exists.")
+    percent_off: Float @doc(description: "The effective percentage off, derived from regular_price vs deal_price.")
+    currency: String @doc(description: "The store currency code for the prices.")
+    starts_at: String @doc(description: "ISO-8601 start of the rule's active window, or null when open-ended.")
+    ends_at: String @doc(description: "ISO-8601 end of the rule's active window (drives the storefront countdown), or null when open-ended.")
+}
+
+enum DealType @doc(description: "The kind of merchandising deal a labelled Catalog Price Rule represents.") {
+    DEAL @doc(description: "A standard deal / promotion — the generic type (its free-text label, conditions and schedule on the rule cover flash sales and special offers).")
+    FIRST_ORDER @doc(description: "A first-order / new-customer offer.")
+}
+
+type StoreConfig {
+    deals_enabled: Boolean @doc(description: "Whether the deals feature is enabled for the store.")
+}

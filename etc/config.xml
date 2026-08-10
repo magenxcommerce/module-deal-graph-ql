@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magenx. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <magenx_deal>
+            <general>
+                <enabled>1</enabled>
+                <count>48</count>
+            </general>
+            <first_order>
+                <enabled>0</enabled>
+                <restore_group>1</restore_group>
+                <default_group>1</default_group>
+            </first_order>
+        </magenx_deal>
+    </default>
+</config>

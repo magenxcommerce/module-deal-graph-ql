@@ -1,0 +1,144 @@
+# Magenx_DealGraphQl
+
+Turns Magento **Catalog Price Rules** into storefront **deals** and exposes them
+over GraphQL. Stock Magento already has everything a deal needs — product
+conditions, a discount action, a schedule, website + customer-group scope and a
+priority — in a Catalog Price Rule; what it lacks is a *label*, a *type*, and any
+GraphQL to read it back for a headless storefront. This module adds exactly that,
+**without touching any core module** and **without a second place to configure
+deals**: you set the discount and the deal label on the *same* rule.
+
+## The idea
+
+A "deal" is any **active Catalog Price Rule that has a Magenx deal label**. The
+rule remains the single source of truth:
+
+- **Conditions / actions / pricing** — the rule's own product conditions and
+  discount action. Magento already indexes which products the rule applies to
+  (`catalogrule_product`) and computes the discounted price, so this module never
+  re-implements matching or pricing: `deal_price` is the product's **actual
+  rule-aware final price** (what the cart charges), `regular_price` its pre-rule
+  price.
+- **Schedule** — the rule's From/To dates drive the storefront countdown.
+- **Scope / priority** — the rule's websites, customer groups and priority decide
+  who sees the deal and which rule wins when several match a product.
+
+On top of the rule this module appends a small fieldset to the Catalog Price Rule
+edit form: a **Deal Badge Label**, optional **Per-Store-View Badge Labels** (for
+language-specific text — see below), and a **Deal Type** (deal / first order).
+**Deal** is the generic type — its free-text label,
+conditions and schedule live on the rule, so it covers flash sales and special
+offers without a dedicated type; **First Order** is distinct because it drives
+the customer-group automation below. Leave the label empty and the rule is an
+ordinary price rule with no deal presentation.
+
+## What it adds
+
+- **`deals(type: DealType, pageSize: Int): Deals`** — products currently on a
+  labelled rule for the request's website + customer group, optionally filtered
+  to one `DealType`. Each `DealItem` resolves a full `ProductInterface`; select
+  its `deal` field for the metadata.
+- **`ProductInterface.deal: DealInfo`** — the winning deal matched to a product
+  (or `null`): `label`, `type`, `discount_type`, `discount_value`,
+  `regular_price`, `deal_price`, `percent_off`, `currency`, `starts_at`,
+  `ends_at`. **The match is an O(1) lookup** into a `productId → deal` index built
+  with one query per request from `catalogrule_product`, so — unlike an EAV
+  fan-out — it is safe to select on listing grids (the "DEAL" badge renders on
+  category/search cards, not only the PDP).
+- **`StoreConfig.deals_enabled`** — mirrors the enable flag (via
+  `extendedConfigData`) so the storefront can hide the Deals menu link / badges
+  without a second round trip.
+
+## Per-store-view (language) badge labels
+
+The badge label is translatable. The **Deal Badge Label** is the default/fallback
+(and the switch that makes a rule a deal — leave it empty and the rule is an
+ordinary price rule). Under it, **Per-Store-View Badge Labels** is a repeatable
+grid where you add one row per store view to override the text for that language
+(e.g. `SALE` for the English view, `ANGEBOT` for German). A store view with no row
+falls back to the default label. The per-product `deal` resolver picks the
+override for the request's store view (`DealProvider::resolveLabel`), so the badge
+reads in the shopper's language on the PDP, grids and cart.
+
+## How the fields are stored
+
+Three nullable columns are added to the core `catalogrule` table via
+`db_schema.xml`: `magenx_deal_label` (default label) and `magenx_deal_type`
+(scalars), plus `magenx_deal_label_store` — a `text` column holding a JSON list
+of `{store_id, label}` overrides. The fields are added to the rule's edit form
+declaratively through the `view/adminhtml/ui_component/catalog_rule_form.xml` UI
+component (the Catalog Price Rule form is a UI component, **not** a legacy
+`Data\Form`, so this is the correct hook — a `_prepareForm`/`afterSetForm` block
+plugin would never render); the overrides use a `dynamicRows` grid with a
+store-view select (`Model/Config/Source/StoreView`).
+
+On save the `Rule::loadPost` plugin (`Plugin/PersistDealFields`) copies the
+scalars across and JSON-encodes the overrides grid (core `loadPost` maps only
+conditions/actions, so the custom fields need it). The scalars prefill straight
+from the rule collection on edit; the JSON overrides column is decoded back into
+`dynamicRows` records by `Plugin/PrefillDealLabelStore` (an `afterGetData` plugin
+on the form's `Magento\CatalogRule\Model\Rule\DataProvider`).
+
+## First-order deals (customer-group automation)
+
+The `first_order` deal **type** is only a label unless something tracks who is a
+first-time customer. Magento gates a Catalog Price Rule by **customer group**, so
+this module can make a first-order deal real by moving customers between groups —
+no third-party module, no cron:
+
+1. On **registration** a new customer is placed in a dedicated *first-order*
+   group. This hooks `AccountManagementInterface::createAccount`, the one seam
+   every channel funnels through — storefront, GraphQL `createCustomer`, **and**
+   `Magenx_SocialLoginGraphQl` — so it covers them all. An explicit non-default
+   registration group (e.g. Wholesale) is never overridden.
+2. On their **first order** (`sales_model_service_quote_submit_success`, which
+   fires for GraphQL `placeOrder` too) they are moved back to the default group.
+   This runs after totals are collected, so the first order *keeps* the discount;
+   only later carts lose it.
+
+A Catalog Price Rule scoped to the first-order group and labelled with Deal Type
+= **First Order** then shows its badge/price only until the customer's first
+order — after which the group flips and, because catalog-rule prices are
+pre-indexed per group, the badge disappears on the next request with **no
+reindex**.
+
+**Setup:**
+
+1. Create a customer group, e.g. *New Customers* (same tax class as General).
+2. **Stores → Configuration → Magenx → Deals → First-Order Deal**: enable it, set
+   the first-order group, the group after first order (General), and the default
+   registration group (General).
+3. Create a Catalog Price Rule scoped to the *New Customers* group with the
+   discount + Deal Label + Deal Type = **First Order**; apply it.
+
+**Caveats:** guests can't be in a group, so this targets shoppers who register
+before ordering (a guest who registers at checkout won't see it — their cart was
+priced as a guest). A cancelled/refunded order does not re-add the group.
+Existing zero-order customers are not back-filled (forward-only). Off by default.
+
+## Requirements
+
+- The **Catalog Price Rule index must have run** (rule save reindexes it; or
+  `bin/magento cron:run` / indexer). Until then `catalogrule_product` is empty and
+  no deals resolve — the module degrades to an empty list, never an error.
+- Because the lookup is per **website + customer group**, a deal only shows to the
+  groups/websites its rule targets — consistent with the price the storefront
+  displays.
+
+## Configuration
+
+- **Stores → Configuration → Magenx → Deals → General**: Enable Deals; Maximum
+  Products on the Deals Page (default 48). When disabled the `deals` query returns
+  empty and `deal` resolves to `null`, so the feature is fully inert.
+- **Stores → Configuration → Magenx → Deals → First-Order Deal**: the
+  customer-group automation described above (off by default).
+- **Marketing → Catalog Price Rules → (a rule) → Deal Display**: set the label +
+  type to turn that rule into a deal.
+
+## Install
+
+```
+bin/magento module:enable Magenx_DealGraphQl
+bin/magento setup:upgrade
+bin/magento setup:di:compile   # production mode
+```

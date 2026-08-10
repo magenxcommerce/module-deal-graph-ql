@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magenx. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Persist the deal label/type from the Catalog Price Rule admin form onto
+         the rule model. loadPost() is the hook the Save controller calls with the
+         full POST before save(); the model loads the columns back automatically
+         on read (they live on the catalogrule table). -->
+    <type name="Magento\CatalogRule\Model\Rule">
+        <plugin name="magenx_deal_persist_fields"
+                type="Magenx\DealGraphQl\Plugin\PersistDealFields"/>
+    </type>
+    <!-- Decode the JSON per-store label overrides back into dynamicRows records
+         so they prefill on the Catalog Price Rule edit form. -->
+    <type name="Magento\CatalogRule\Model\Rule\DataProvider">
+        <plugin name="magenx_deal_prefill_label_store"
+                type="Magenx\DealGraphQl\Plugin\PrefillDealLabelStore"/>
+    </type>
+    <!-- Assign new registrations to the first-order customer group. createAccount
+         is the seam every channel funnels through (Luma, GraphQL createCustomer,
+         social login), so one plugin covers them all. -->
+    <type name="Magento\Customer\Api\AccountManagementInterface">
+        <plugin name="magenx_deal_assign_first_order_group"
+                type="Magenx\DealGraphQl\Plugin\AssignFirstOrderGroup"/>
+    </type>
+</config>

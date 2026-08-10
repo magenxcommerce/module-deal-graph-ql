@@ -1,0 +1,9 @@
+{
+    "catalogrule": {
+        "column": {
+            "magenx_deal_label": true,
+            "magenx_deal_label_store": true,
+            "magenx_deal_type": true
+        }
+    }
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magenx. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Expose the deals enable flag on the storeConfig GraphQL query so the
+         storefront can hide the Deals menu link / product badges when the
+         feature is off, without a second round trip. -->
+    <type name="Magento\StoreGraphQl\Model\Resolver\Store\StoreConfigDataProvider">
+        <arguments>
+            <argument name="extendedConfigData" xsi:type="array">
+                <item name="deals_enabled" xsi:type="string">magenx_deal/general/enabled</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

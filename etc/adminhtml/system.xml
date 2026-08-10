@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magenx. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="magenx" translate="label" sortOrder="400">
+            <label>Magenx</label>
+        </tab>
+        <section id="magenx_deal" translate="label" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Deals</label>
+            <tab>magenx</tab>
+            <resource>Magenx_DealGraphQl::config</resource>
+            <group id="general" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General</label>
+                <comment><![CDATA[Deals are ordinary <a href="../catalog_rule/">Catalog Price Rules</a> with a "Deal Display" label + type set on the rule. The rule owns the conditions, actions (discount), schedule and scope; this module surfaces the labelled ones on the storefront. When disabled the deals query returns empty and no product deal badge is resolved.]]></comment>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Deals</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="count" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum Products on the Deals Page</label>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                    <comment>Caps how many products the deals query returns.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+            <group id="first_order" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>First-Order Deal (Customer Group Automation)</label>
+                <comment><![CDATA[Makes a <b>First Order</b> deal type actually track first-time customers. New registrations are placed in a dedicated customer group (any channel: storefront, GraphQL, social login); once they place their first order they are moved back to the default group. Scope a <a href="../catalog_rule/">Catalog Price Rule</a> to the group below and label it as a First Order deal, and its badge/price will show only until the customer's first order. <b>Note:</b> guests can't be in a group, so this targets shoppers who register before ordering.]]></comment>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable First-Order Group Automation</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="new_customer_group" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>First-Order Customer Group</label>
+                    <source_model>Magento\Customer\Model\Customer\Attribute\Source\Group</source_model>
+                    <comment>New customers are placed here. Scope your first-order Catalog Price Rule to this group. Use its own group (not General), and give it the same tax class as General.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="restore_group" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Group After First Order</label>
+                    <source_model>Magento\Customer\Model\Customer\Attribute\Source\Group</source_model>
+                    <comment>Customers are moved to this group once they place their first order (usually General).</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="default_group" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Registration Group</label>
+                    <source_model>Magento\Customer\Model\Customer\Attribute\Source\Group</source_model>
+                    <comment>Only registrations with this (or no) group are auto-assigned, so an explicit group such as Wholesale is never overridden. Usually General.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

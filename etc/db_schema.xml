@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magenx. All rights reserved.
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <!-- Add the deal presentation fields to the native Catalog Price Rule table.
+         The rule keeps owning the conditions/actions/pricing/schedule; these two
+         columns turn a rule into a labelled "deal" for the storefront. Empty
+         label = an ordinary catalog price rule (no deal badge). -->
+    <table name="catalogrule" resource="default">
+        <column xsi:type="varchar" name="magenx_deal_label" nullable="true" length="255"
+                comment="Magenx deal badge label — default/fallback (empty = not a deal)"/>
+        <column xsi:type="text" name="magenx_deal_label_store" nullable="true"
+                comment="Magenx per-store-view deal label overrides (JSON list of {store_id,label})"/>
+        <column xsi:type="varchar" name="magenx_deal_type" nullable="true" length="32"
+                comment="Magenx deal type: deal|first_order"/>
+    </table>
+</schema>
