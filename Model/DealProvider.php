@@ -170,6 +170,7 @@ class DealProvider
      * @param string $type
      * @return string
      */
+    // phpcs:ignore Magento2.Functions.StaticFunction.StaticFunction -- pure enum mapping; nothing to intercept.
     public static function toEnum(string $type): string
     {
         return match ($type) {
@@ -184,6 +185,7 @@ class DealProvider
      * @param string $enum
      * @return string|null
      */
+    // phpcs:ignore Magento2.Functions.StaticFunction.StaticFunction -- pure enum mapping; nothing to intercept.
     public static function fromEnum(string $enum): ?string
     {
         return match ($enum) {
