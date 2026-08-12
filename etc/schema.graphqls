@@ -2,7 +2,7 @@
 
 type Query {
     deals(
-        type: DealType @doc(description: "Restrict the list to a single deal type. Omit for every active deal.")
+        type: DealType @doc(description: "Restrict the list to products matched by a deal of this type. Omit for every active deal.")
         pageSize: Int @doc(description: "How many deal products to return (capped at the store's configured limit).")
     ): Deals
         @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Deals")
@@ -23,7 +23,7 @@ type DealItem @doc(description: "A single product on a deal.") {
 interface ProductInterface {
     deal: DealInfo
         @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Product\\Deal")
-        @doc(description: "The active deal (a labelled Catalog Price Rule) matched to this product for the request's website + customer group, or null when the product is on no deal (or deals are disabled). Backed by the indexed Catalog Price Rule, so it is safe on listing grids.")
+        @doc(description: "The active deal (a labelled Catalog Price Rule) matched to this product for the request's website + customer group, or null when the product is on no deal (or deals are disabled). Backed by the indexed Catalog Price Rule and cached per request, so it is safe on listing grids.")
 }
 
 type DealInfo @doc(description: "The deal a product is currently part of, driven by a labelled Catalog Price Rule.") {

@@ -14,6 +14,9 @@
             <module name="Magento_StoreGraphQl"/>
             <module name="Magento_Customer"/>
             <module name="Magento_Sales"/>
+            <module name="Magento_Backend"/>
+            <module name="Magento_Config"/>
+            <module name="Magento_Ui"/>
         </sequence>
     </module>
 </config>

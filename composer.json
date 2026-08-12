@@ -7,12 +7,17 @@
     "require": {
         "php": "~8.3.0||~8.4.0||~8.5.0",
         "magento/framework": "*",
+        "magento/module-backend": "*",
         "magento/module-catalog": "*",
         "magento/module-catalog-graph-ql": "*",
         "magento/module-catalog-rule": "*",
+        "magento/module-config": "*",
         "magento/module-customer": "*",
+        "magento/module-graph-ql": "*",
+        "magento/module-sales": "*",
         "magento/module-store": "*",
-        "magento/module-store-graph-ql": "*"
+        "magento/module-store-graph-ql": "*",
+        "magento/module-ui": "*"
     },
     "type": "magento2-module",
     "license": [
