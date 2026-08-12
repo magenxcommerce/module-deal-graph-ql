@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace Magenx\DealGraphQl\Plugin;
 
 use Magento\CatalogRule\Model\Rule\DataProvider;
+use Magento\Framework\Serialize\Serializer\Json;
 
 /**
  * Decodes the per-store-view deal-label overrides for the Catalog Price Rule
@@ -21,6 +22,14 @@ use Magento\CatalogRule\Model\Rule\DataProvider;
 class PrefillDealLabelStore
 {
     private const FIELD = 'magenx_deal_label_store';
+
+    /**
+     * @param Json $serializer
+     */
+    public function __construct(
+        private readonly Json $serializer
+    ) {
+    }
 
     /**
      * @param DataProvider $subject
@@ -51,21 +60,23 @@ class PrefillDealLabelStore
      */
     private function decode($value): array
     {
-        if (is_array($value)) {
-            return $value;
-        }
-        if (!is_string($value) || $value === '') {
-            return [];
+        if (is_string($value) && $value !== '') {
+            try {
+                $value = $this->serializer->unserialize($value);
+            } catch (\InvalidArgumentException $e) {
+                return [];
+            }
         }
 
-        $decoded = json_decode($value, true);
-        if (!is_array($decoded)) {
+        if (!is_array($value)) {
             return [];
         }
 
         $rows = [];
-        foreach ($decoded as $row) {
-            if (is_array($row) && isset($row['store_id'], $row['label'])) {
+        foreach ($value as $row) {
+            if (is_array($row) && isset($row['store_id'], $row['label'])
+                && is_scalar($row['store_id']) && is_scalar($row['label'])
+            ) {
                 $rows[] = [
                     'store_id' => (string) $row['store_id'],
                     'label' => (string) $row['label'],

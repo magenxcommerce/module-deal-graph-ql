@@ -13,8 +13,8 @@ use Magento\Store\Model\StoreManagerInterface;
  * Store-view options for the per-store-view deal-label override grid on the
  * Catalog Price Rule form.
  *
- * Lists every non-admin store view as "Website / Store — view (code)" so a
- * merchant can pick which language/store view a label override applies to. The
+ * Lists every non-admin store view as "Store View Name (code)" so a merchant can
+ * pick which language/store view a label override applies to. The
  * override map is keyed by the numeric store id (see
  * {@see \Magenx\DealGraphQl\Model\DealProvider::resolveLabel()}).
  */

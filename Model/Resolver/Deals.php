@@ -10,6 +10,7 @@ use Magenx\DealGraphQl\Model\Config;
 use Magenx\DealGraphQl\Model\CustomerContext;
 use Magenx\DealGraphQl\Model\DealProvider;
 use Magento\Framework\GraphQl\Config\Element\Field;
+use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 
@@ -48,8 +49,14 @@ class Deals implements ResolverInterface
         }
 
         $max = $this->config->getCount($storeId);
-        $requested = isset($args['pageSize']) ? (int) $args['pageSize'] : $max;
-        $limit = max(1, min($requested, $max));
+        $limit = $max;
+        if (isset($args['pageSize'])) {
+            $requested = (int) $args['pageSize'];
+            if ($requested < 1) {
+                throw new GraphQlInputException(__('pageSize value must be greater than 0.'));
+            }
+            $limit = min($requested, $max);
+        }
 
         $type = isset($args['type']) ? DealProvider::fromEnum((string) $args['type']) : null;
 

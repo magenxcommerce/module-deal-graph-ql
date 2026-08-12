@@ -9,6 +9,7 @@ namespace Magenx\DealGraphQl\Model;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Api\Data\GroupInterface;
 use Magento\GraphQl\Model\Query\ContextInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Resolves the customer group id for the current GraphQL request.
@@ -25,9 +26,11 @@ class CustomerContext
 
     /**
      * @param CustomerRepositoryInterface $customerRepository
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        private readonly CustomerRepositoryInterface $customerRepository
+        private readonly CustomerRepositoryInterface $customerRepository,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -40,18 +43,25 @@ class CustomerContext
     public function getGroupId(ContextInterface $context): int
     {
         $userId = (int) $context->getUserId();
-        if ($context->getExtensionAttributes()->getIsCustomer() === true && $userId > 0) {
-            if (isset($this->groupCache[$userId])) {
-                return $this->groupCache[$userId];
-            }
-            try {
-                return $this->groupCache[$userId] =
-                    (int) $this->customerRepository->getById($userId)->getGroupId();
-            } catch (\Exception $e) {
-                return GroupInterface::NOT_LOGGED_IN_ID;
-            }
+        if ($context->getExtensionAttributes()->getIsCustomer() !== true || $userId < 1) {
+            return GroupInterface::NOT_LOGGED_IN_ID;
         }
 
-        return GroupInterface::NOT_LOGGED_IN_ID;
+        if (isset($this->groupCache[$userId])) {
+            return $this->groupCache[$userId];
+        }
+
+        try {
+            $groupId = (int) $this->customerRepository->getById($userId)->getGroupId();
+        } catch (\Exception $e) {
+            // Fall back to guest pricing rather than erroring the query, but say
+            // so — silently downgrading a logged-in shopper hides a real fault.
+            $this->logger->warning(
+                'Magenx_DealGraphQl: could not resolve the customer group, using NOT_LOGGED_IN. ' . $e->getMessage()
+            );
+            $groupId = GroupInterface::NOT_LOGGED_IN_ID;
+        }
+
+        return $this->groupCache[$userId] = $groupId;
     }
 }

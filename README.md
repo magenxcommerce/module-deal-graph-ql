@@ -39,15 +39,19 @@ ordinary price rule with no deal presentation.
 
 - **`deals(type: DealType, pageSize: Int): Deals`** — products currently on a
   labelled rule for the request's website + customer group, optionally filtered
-  to one `DealType`. Each `DealItem` resolves a full `ProductInterface`; select
-  its `deal` field for the metadata.
+  to products matched by a rule of one `DealType`. Each `DealItem` resolves a
+  full `ProductInterface`; select its `deal` field for the metadata.
 - **`ProductInterface.deal: DealInfo`** — the winning deal matched to a product
   (or `null`): `label`, `type`, `discount_type`, `discount_value`,
   `regular_price`, `deal_price`, `percent_off`, `currency`, `starts_at`,
-  `ends_at`. **The match is an O(1) lookup** into a `productId → deal` index built
-  with one query per request from `catalogrule_product`, so — unlike an EAV
-  fan-out — it is safe to select on listing grids (the "DEAL" badge renders on
-  category/search cards, not only the PDP).
+  `ends_at`. The lookup is **bounded and request-cached**: the labelled rules are
+  read once per request (a handful of rows), and when a store has none — the
+  common case — the field short circuits to `null` with no further query at all.
+  Otherwise products are matched against `catalogrule_product` on its
+  `product_id` index, in batches, with hits *and* misses cached, so — unlike an
+  EAV fan-out — it is safe to select on listing grids (the "DEAL" badge renders
+  on category/search cards, not only the PDP). The `deals` query warms that cache
+  for the whole page in one query, and never pulls more rows than `pageSize`.
 - **`StoreConfig.deals_enabled`** — mirrors the enable flag (via
   `extendedConfigData`) so the storefront can hide the Deals menu link / badges
   without a second round trip.
