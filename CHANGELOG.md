@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.0...v1.0.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* Refactor deal lookup to batch-load products and short-circuit on empty rules ([#4](https://github.com/magenxcommerce/module-deal-graph-ql/issues/4)) ([97ac84d](https://github.com/magenxcommerce/module-deal-graph-ql/commit/97ac84de5928bc7d229ab0864041ad264e0af1f7))
+
 ## 1.0.0 (2026-08-11)
 
 
