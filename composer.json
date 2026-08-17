@@ -1,6 +1,7 @@
 {
     "name": "magenxcommerce/module-deal-graph-ql",
     "description": "Extends Magento Catalog Price Rules with a merchandising deal label + type (deal / first-order) and exposes them over GraphQL: a `deals` query, a per-product `deal` badge (label, type, authoritative deal price from the rule, schedule/countdown) for grids and the PDP, and a `deals_enabled` store-config flag. The Catalog Price Rule is the single source of truth for conditions, actions and pricing; this module only adds the presentation on top.",
+    "version": "1.0.1",
     "config": {
         "sort-packages": true
     },
