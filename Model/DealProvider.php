@@ -9,6 +9,7 @@ namespace Magenx\DealGraphQl\Model;
 use Magenx\DealGraphQl\Model\Config\Source\Type;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Select;
+use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
 
@@ -32,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * large catalog, where materialising the whole (product → rule) map would mean
  * pulling one row per product per rule into PHP on every product query.
  */
-class DealProvider
+class DealProvider implements ResetAfterRequestInterface
 {
     /** @var array<int, array<string, mixed>>|null ruleId => rule metadata, loaded once per request */
     private ?array $dealRules = null;
@@ -53,6 +54,16 @@ class DealProvider
         private readonly Json $serializer,
         private readonly LoggerInterface $logger
     ) {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function _resetState(): void
+    {
+        $this->dealRules = null;
+        $this->matchCache = [];
+        $this->now = null;
     }
 
     /**

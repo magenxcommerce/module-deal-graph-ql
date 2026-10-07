@@ -8,6 +8,7 @@ namespace Magenx\DealGraphQl\Model;
 
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Api\Data\GroupInterface;
+use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use Magento\GraphQl\Model\Query\ContextInterface;
 use Psr\Log\LoggerInterface;
 
@@ -19,7 +20,7 @@ use Psr\Log\LoggerInterface;
  * prices are shown for: the logged-in customer's group, or NOT_LOGGED_IN (0) for
  * guests. Cached per request.
  */
-class CustomerContext
+class CustomerContext implements ResetAfterRequestInterface
 {
     /** @var array<int, int> customer id => group id */
     private array $groupCache = [];
@@ -32,6 +33,14 @@ class CustomerContext
         private readonly CustomerRepositoryInterface $customerRepository,
         private readonly LoggerInterface $logger
     ) {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function _resetState(): void
+    {
+        $this->groupCache = [];
     }
 
     /**
