@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.3](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.2...v1.0.3) (2026-10-08)
+
+
+### Bug Fixes
+
+* resolve ProductInterface.deal as a batch resolver ([#10](https://github.com/magenxcommerce/module-deal-graph-ql/issues/10)) ([6e3f48d](https://github.com/magenxcommerce/module-deal-graph-ql/commit/6e3f48de00917761b97e9f8896aca10dcf860a9b))
+
+
+### Performance Improvements
+
+* resolve ProductInterface.deal as a batch resolver ([6e3f48d](https://github.com/magenxcommerce/module-deal-graph-ql/commit/6e3f48de00917761b97e9f8896aca10dcf860a9b))
+
 ## [1.0.2](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.1...v1.0.2) (2026-10-08)
 
 
