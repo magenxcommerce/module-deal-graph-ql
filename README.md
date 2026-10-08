@@ -47,8 +47,9 @@ ordinary price rule with no deal presentation.
   `ends_at`. The lookup is **bounded and request-cached**: the labelled rules are
   read once per request (a handful of rows), and when a store has none — the
   common case — the field short circuits to `null` with no further query at all.
-  Otherwise products are matched against `catalogrule_product` on its
-  `product_id` index, in batches, with hits *and* misses cached, so — unlike an
+  Otherwise the field, a batch resolver, matches every product of a query
+  branch (a grid, a related/upsell list) against `catalogrule_product` in ONE
+  query on its `product_id` index, with hits *and* misses cached, so — unlike an
   EAV fan-out — it is safe to select on listing grids (the "DEAL" badge renders
   on category/search cards, not only the PDP). The `deals` query warms that cache
   for the whole page in one query, and never pulls more rows than `pageSize`.

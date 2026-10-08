@@ -89,6 +89,22 @@ class DealProvider implements ResetAfterRequestInterface
     }
 
     /**
+     * Match a batch of products in one query, so the {@see matchProduct()}
+     * calls that follow are served from the request cache.
+     *
+     * @param int $websiteId
+     * @param int $groupId
+     * @param int[] $productIds
+     * @return void
+     */
+    public function preloadMatches(int $websiteId, int $groupId, array $productIds): void
+    {
+        if ($productIds !== []) {
+            $this->loadMatches($websiteId, $groupId, $productIds);
+        }
+    }
+
+    /**
      * Ordered, de-duplicated product ids currently on a deal for this scope.
      *
      * The type filter is applied to the rules the products are matched against,
