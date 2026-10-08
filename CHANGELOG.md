@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.1...v1.0.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* reset request-scoped deal caches for long-lived application servers ([#8](https://github.com/magenxcommerce/module-deal-graph-ql/issues/8)) ([22ef5cf](https://github.com/magenxcommerce/module-deal-graph-ql/commit/22ef5cf79b905665d52aaf7843b0b97a6fff1c39))
+
 ## [1.0.1](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.0...v1.0.1) (2026-08-12)
 
 
