@@ -52,8 +52,16 @@ class CustomerContext implements ResetAfterRequestInterface
     public function getGroupId(ContextInterface $context): int
     {
         $userId = (int) $context->getUserId();
-        if ($context->getExtensionAttributes()->getIsCustomer() !== true || $userId < 1) {
+        $extension = $context->getExtensionAttributes();
+        if ($extension->getIsCustomer() !== true || $userId < 1) {
             return GroupInterface::NOT_LOGGED_IN_ID;
+        }
+
+        // Magento_CustomerGraphQl already resolved the group into the context
+        // (2.4.7+); only fall back to loading the customer when it is absent.
+        $contextGroupId = $extension->getCustomerGroupId();
+        if ($contextGroupId !== null) {
+            return (int) $contextGroupId;
         }
 
         if (isset($this->groupCache[$userId])) {

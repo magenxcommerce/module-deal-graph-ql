@@ -69,11 +69,8 @@ class Deals implements ResolverInterface
 
         $items = [];
         foreach ($productIds as $productId) {
-            $items[] = [
-                // Consumed by the DealProduct field resolver.
-                'product_id' => $productId,
-                'store_id' => $storeId,
-            ];
+            // Consumed by the DealProduct batch resolver.
+            $items[] = ['product_id' => $productId];
         }
 
         return [

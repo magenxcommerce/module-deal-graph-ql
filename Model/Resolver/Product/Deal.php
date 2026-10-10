@@ -108,13 +108,20 @@ class Deal implements BatchResolverInterface
                 continue;
             }
 
-            $regularFallback = (float) $product->getPrice();
-            $finalFallback = $product instanceof Product ? (float) $product->getFinalPrice() : $regularFallback;
-
             $response->addResponse($request, $this->provider->buildDealInfo(
                 $row,
-                $this->resolvePrice($product, RegularPrice::PRICE_CODE, $regularFallback),
-                $this->resolvePrice($product, FinalPrice::PRICE_CODE, $finalFallback),
+                $this->resolvePrice(
+                    $product,
+                    RegularPrice::PRICE_CODE,
+                    static fn (): float => (float) $product->getPrice()
+                ),
+                $this->resolvePrice(
+                    $product,
+                    FinalPrice::PRICE_CODE,
+                    static fn (): float => $product instanceof Product
+                        ? (float) $product->getFinalPrice()
+                        : (float) $product->getPrice()
+                ),
                 $currency,
                 $storeId
             ));
@@ -144,15 +151,20 @@ class Deal implements BatchResolverInterface
      * when the model is a bare ProductInterface implementation, which carries no
      * price info at all.
      *
+     * The fallback is a callable on purpose: when `final_price` is not already
+     * on the model, Product::getFinalPrice() runs the price model and its
+     * `catalog_product_get_final_price` observers (a catalog-rule price query per
+     * product), so it must only run when the price info read actually failed.
+     *
      * @param ProductInterface $product
      * @param string $priceCode
-     * @param float $fallback
+     * @param callable(): float $fallback
      * @return float
      */
-    private function resolvePrice(ProductInterface $product, string $priceCode, float $fallback): float
+    private function resolvePrice(ProductInterface $product, string $priceCode, callable $fallback): float
     {
         if (!$product instanceof SaleableInterface) {
-            return $fallback;
+            return $fallback();
         }
 
         try {
@@ -164,6 +176,6 @@ class Deal implements BatchResolverInterface
             // Fall through to the raw attribute value.
         }
 
-        return $fallback;
+        return $fallback();
     }
 }
