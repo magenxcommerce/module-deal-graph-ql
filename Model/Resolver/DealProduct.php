@@ -6,8 +6,8 @@ declare(strict_types=1);
 
 namespace Magenx\DealGraphQl\Model\Resolver;
 
+use GraphQL\Type\Definition\ResolveInfo;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\CatalogGraphQl\Model\Resolver\Product\ProductFieldsSelector;
 use Magento\CatalogGraphQl\Model\Resolver\Products\DataProvider\Product as ProductDataProvider;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\GraphQl\Config\Element\Field;
@@ -34,16 +34,20 @@ use Magento\GraphQl\Model\Query\ContextInterface as QueryContextInterface;
  * from the website resolves to null instead of rendering a card that links
  * nowhere. Each value carries the loaded model under `model`, the contract the
  * CatalogGraphQl ProductInterface field resolvers (and our own `deal`) read.
+ *
+ * The selected attributes come from ResolveInfo::getFieldSelection(), NOT
+ * core's ProductFieldsSelector: its AttributesJoiner recurses into a named
+ * fragment's children assuming each is a FieldNode, so an inline fragment
+ * inside a spread (`...ProductCardFields` carries `... on
+ * CustomizableProductInterface { options }`) throws a TypeError.
  */
 class DealProduct implements BatchResolverInterface
 {
     /**
-     * @param ProductFieldsSelector $productFieldsSelector
      * @param ProductDataProvider $productDataProvider
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      */
     public function __construct(
-        private readonly ProductFieldsSelector $productFieldsSelector,
         private readonly ProductDataProvider $productDataProvider,
         private readonly SearchCriteriaBuilder $searchCriteriaBuilder
     ) {
@@ -64,7 +68,7 @@ class DealProduct implements BatchResolverInterface
             if ($productId > 0) {
                 $productIds[$productId] = $productId;
             }
-            $fields[] = $this->productFieldsSelector->getProductFieldsFromInfo($request->getInfo());
+            $fields[] = $this->getSelectedFields($request->getInfo());
         }
 
         $products = $productIds !== []
@@ -89,6 +93,20 @@ class DealProduct implements BatchResolverInterface
         }
 
         return $response;
+    }
+
+    /**
+     * Top-level field names selected on `product`, with named and inline fragments merged.
+     *
+     * @param ResolveInfo $info
+     * @return string[]
+     */
+    private function getSelectedFields(ResolveInfo $info): array
+    {
+        return array_values(array_filter(
+            array_keys($info->getFieldSelection()),
+            static fn (string $name): bool => !str_starts_with($name, '__')
+        ));
     }
 
     /**
