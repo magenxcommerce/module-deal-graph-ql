@@ -6,54 +6,118 @@ declare(strict_types=1);
 
 namespace Magenx\DealGraphQl\Model\Resolver;
 
-use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\CatalogGraphQl\Model\Resolver\Product\ProductFieldsSelector;
+use Magento\CatalogGraphQl\Model\Resolver\Products\DataProvider\Product as ProductDataProvider;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\GraphQl\Config\Element\Field;
-use Magento\Framework\GraphQl\Exception\GraphQlInputException;
-use Magento\Framework\GraphQl\Query\ResolverInterface;
-use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
+use Magento\Framework\GraphQl\Query\Resolver\BatchRequestItemInterface;
+use Magento\Framework\GraphQl\Query\Resolver\BatchResolverInterface;
+use Magento\Framework\GraphQl\Query\Resolver\BatchResponse;
+use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
+use Magento\GraphQl\Model\Query\ContextInterface as QueryContextInterface;
 
 /**
  * Resolves the `product` field on a DealItem.
  *
- * Returns the product data array with the loaded product model attached under
- * `model`, the contract the CatalogGraphQl ProductInterface field resolvers
- * (name, price_range, image, and our own `deal`) read from. Mirrors
- * Magento_WishlistGraphQl's / Magenx_BestSellerGraphQl's product resolver.
+ * A BATCH resolver on purpose: every DealItem of the `deals` list is hydrated
+ * by ONE product collection load that selects only the attributes the query
+ * asked for — the same path core uses for related/upsell lists
+ * (Magento_RelatedProductGraphQl's AbstractLikedProducts). Loading each item
+ * through ProductRepositoryInterface::getById() instead cost a full EAV model
+ * load (every attribute, media gallery, options, stock) per item, which was
+ * most of a ~0.7 s GetDeals call. Keep it a BatchResolverInterface.
+ *
+ * The collection applies the store's catalog visibility (via the category
+ * product index), so a product that is disabled, not visible in the catalog —
+ * e.g. the simple child of a configurable the rule also matched — or removed
+ * from the website resolves to null instead of rendering a card that links
+ * nowhere. Each value carries the loaded model under `model`, the contract the
+ * CatalogGraphQl ProductInterface field resolvers (and our own `deal`) read.
  */
-class DealProduct implements ResolverInterface
+class DealProduct implements BatchResolverInterface
 {
     /**
-     * @param ProductRepositoryInterface $productRepository
+     * @param ProductFieldsSelector $productFieldsSelector
+     * @param ProductDataProvider $productDataProvider
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
      */
     public function __construct(
-        private readonly ProductRepositoryInterface $productRepository
+        private readonly ProductFieldsSelector $productFieldsSelector,
+        private readonly ProductDataProvider $productDataProvider,
+        private readonly SearchCriteriaBuilder $searchCriteriaBuilder
     ) {
     }
 
     /**
-     * @inheritDoc
+     * @param ContextInterface $context
+     * @param Field $field
+     * @param BatchRequestItemInterface[] $requests
+     * @return BatchResponse
      */
-    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
+    public function resolve(ContextInterface $context, Field $field, array $requests): BatchResponse
     {
-        if (!isset($value['product_id'])) {
-            throw new GraphQlInputException(__('"product_id" value should be specified.'));
+        $productIds = [];
+        $fields = [];
+        foreach ($requests as $request) {
+            $productId = (int) ($request->getValue()['product_id'] ?? 0);
+            if ($productId > 0) {
+                $productIds[$productId] = $productId;
+            }
+            $fields[] = $this->productFieldsSelector->getProductFieldsFromInfo($request->getInfo());
         }
 
-        $storeId = isset($value['store_id'])
-            ? (int) $value['store_id']
-            : (int) $context->getExtensionAttributes()->getStore()->getId();
+        $products = $productIds !== []
+            ? $this->loadProducts(
+                array_values($productIds),
+                array_values(array_unique(array_merge([], ...$fields))),
+                $context
+            )
+            : [];
 
-        try {
-            $product = $this->productRepository->getById((int) $value['product_id'], false, $storeId);
-        } catch (NoSuchEntityException $e) {
-            // Product was deleted from the catalog; the deal line can't render it.
-            return null;
+        $response = new BatchResponse();
+        foreach ($requests as $request) {
+            $product = $products[(int) ($request->getValue()['product_id'] ?? 0)] ?? null;
+            if ($product === null) {
+                $response->addResponse($request, null);
+                continue;
+            }
+
+            $productData = $product->getData();
+            $productData['model'] = $product;
+            $response->addResponse($request, $productData);
         }
 
-        $productData = $product->getData();
-        $productData['model'] = $product;
+        return $response;
+    }
 
-        return $productData;
+    /**
+     * Load the requested products with only the selected attributes, keyed by id.
+     *
+     * @param int[] $productIds
+     * @param string[] $attributes
+     * @param ContextInterface $context
+     * @return array<int, ProductInterface>
+     */
+    private function loadProducts(array $productIds, array $attributes, ContextInterface $context): array
+    {
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('entity_id', $productIds, 'in')
+            ->create();
+
+        $result = $this->productDataProvider->getList(
+            $searchCriteria,
+            $attributes,
+            false,
+            false,
+            $context instanceof QueryContextInterface ? $context : null
+        );
+
+        $products = [];
+        foreach ($result->getItems() as $product) {
+            $products[(int) $product->getId()] = $product;
+        }
+
+        return $products;
     }
 }

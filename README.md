@@ -40,7 +40,11 @@ ordinary price rule with no deal presentation.
 - **`deals(type: DealType, pageSize: Int): Deals`** — products currently on a
   labelled rule for the request's website + customer group, optionally filtered
   to products matched by a rule of one `DealType`. Each `DealItem` resolves a
-  full `ProductInterface`; select its `deal` field for the metadata.
+  full `ProductInterface`; select its `deal` field for the metadata. All items
+  are hydrated by ONE product collection load (a batch resolver selecting only
+  the requested attributes, like core related/upsell lists), and a product not
+  visible in the catalog — disabled, a configurable's simple child, off the
+  website — resolves to `null`.
 - **`ProductInterface.deal: DealInfo`** — the winning deal matched to a product
   (or `null`): `label`, `type`, `discount_type`, `discount_value`,
   `regular_price`, `deal_price`, `percent_off`, `currency`, `starts_at`,
