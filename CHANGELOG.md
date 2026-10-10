@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.4](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.3...v1.0.4) (2026-10-10)
+
+
+### Bug Fixes
+
+* Convert DealProduct resolver to batch resolver for performance ([#12](https://github.com/magenxcommerce/module-deal-graph-ql/issues/12)) ([04a2e87](https://github.com/magenxcommerce/module-deal-graph-ql/commit/04a2e878a3a2f4d785335e7114af66e4c1bd30c4))
+* hydrate deal products in one batched collection load ([04a2e87](https://github.com/magenxcommerce/module-deal-graph-ql/commit/04a2e878a3a2f4d785335e7114af66e4c1bd30c4))
+
 ## [1.0.3](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.2...v1.0.3) (2026-10-08)
 
 
