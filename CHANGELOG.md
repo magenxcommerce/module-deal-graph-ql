@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.4...v1.0.5) (2026-10-10)
+
+
+### Bug Fixes
+
+* read DealItem.product field selection without AttributesJoiner ([#14](https://github.com/magenxcommerce/module-deal-graph-ql/issues/14)) ([b9e149b](https://github.com/magenxcommerce/module-deal-graph-ql/commit/b9e149b2999d5a98a35ce22843e6c57a7d37e250))
+
 ## [1.0.4](https://github.com/magenxcommerce/module-deal-graph-ql/compare/v1.0.3...v1.0.4) (2026-10-10)
 
 
