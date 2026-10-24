@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright © Magenx. All rights reserved.
+ */
+-->
+<!--
+    Adds the gift-deal fields to the native Cart Price Rule form (Marketing →
+    Cart Price Rules). Like catalog_rule_form.xml, the form is a UI component, so
+    the fields are declared here; they prefill from the rule's DataProvider and
+    persist through the Rule::loadPost plugin (Plugin\Gift\PersistGiftFields).
+-->
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <fieldset name="rule_information">
+        <field name="magenx_gift_sku" formElement="input" sortOrder="200">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Free Gift SKU</label>
+                <notice translate="true">Gift deal: while this rule applies to a cart, this product is added at price 0 and removed again when the rule stops applying. The rule's store label is shown as the gift's label. Leave empty for an ordinary cart rule. Requires Stores → Configuration → Magenx → Deals → Gift Deals.</notice>
+                <dataScope>magenx_gift_sku</dataScope>
+                <validation>
+                    <rule name="max_text_length" xsi:type="number">64</rule>
+                </validation>
+            </settings>
+        </field>
+        <field name="magenx_gift_qty" formElement="input" sortOrder="210">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Free Gift Quantity</label>
+                <notice translate="true">How many of the gift to add (1–100). Defaults to 1.</notice>
+                <dataScope>magenx_gift_qty</dataScope>
+                <validation>
+                    <rule name="validate-digits" xsi:type="boolean">true</rule>
+                    <rule name="validate-number-range" xsi:type="string">1-100</rule>
+                </validation>
+            </settings>
+        </field>
+    </fieldset>
+</form>

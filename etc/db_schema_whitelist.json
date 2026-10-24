@@ -5,5 +5,16 @@
             "magenx_deal_label_store": true,
             "magenx_deal_type": true
         }
+    },
+    "salesrule": {
+        "column": {
+            "magenx_gift_sku": true,
+            "magenx_gift_qty": true
+        }
+    },
+    "quote": {
+        "column": {
+            "magenx_declined_gift_rules": true
+        }
     }
 }

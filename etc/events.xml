@@ -12,4 +12,9 @@
         <observer name="magenx_deal_remove_first_order_group"
                   instance="Magenx\DealGraphQl\Observer\RemoveFirstOrderGroup"/>
     </event>
+    <!-- Gift deals: a gift the shopper removes stays out of that cart. -->
+    <event name="sales_quote_remove_item">
+        <observer name="magenx_deal_record_declined_gift"
+                  instance="Magenx\DealGraphQl\Observer\Gift\RecordDeclinedGift"/>
+    </event>
 </config>

@@ -7,6 +7,9 @@ type Query {
     ): Deals
         @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Deals")
         @doc(description: "Products currently on a deal (a standard deal or a first-order offer) — i.e. matched by an active, labelled Catalog Price Rule for the request's website + customer group.")
+    giftDeals: [GiftDeal!]!
+        @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Gift\\GiftDeals")
+        @doc(description: "Gift deals live now for the request's website + customer group: Cart Price Rules without a coupon that add a free product while they apply. Empty when deals or gift deals are disabled.")
 }
 
 type Deals @doc(description: "A list of products currently on a deal.") {
@@ -42,6 +45,27 @@ type DealInfo @doc(description: "The deal a product is currently part of, driven
 enum DealType @doc(description: "The kind of merchandising deal a labelled Catalog Price Rule represents.") {
     DEAL @doc(description: "A standard deal / promotion — the generic type (its free-text label, conditions and schedule on the rule cover flash sales and special offers).")
     FIRST_ORDER @doc(description: "A first-order / new-customer offer.")
+}
+
+type GiftDeal @doc(description: "A free gift added to the cart by a Cart Price Rule while the rule applies.") {
+    rule_id: Int! @doc(description: "The Cart Price Rule id.")
+    label: String @doc(description: "The rule's store label, e.g. \"Free tote bag with orders over €50\". Null when the rule has none.")
+    gift_qty: Int! @doc(description: "How many of the gift product are added.")
+    ends_at: String @doc(description: "ISO-8601 end of the rule's active window, or null when open-ended.")
+    product: ProductInterface
+        @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\DealProduct")
+        @doc(description: "The gift product. Null if it is disabled or not visible in the catalog.")
+}
+
+interface CartItemInterface {
+    deal_gift: DealGift
+        @resolver(class: "Magenx\\DealGraphQl\\Model\\Resolver\\Gift\\CartItemGift")
+        @doc(description: "Set when this line is a free gift added by a gift deal (Cart Price Rule); null for an ordinary line. The line is priced 0 and its quantity is fixed by the rule. Removing it keeps it out of this cart.")
+}
+
+type DealGift @doc(description: "The gift deal a cart line was added by.") {
+    rule_id: Int! @doc(description: "The Cart Price Rule id.")
+    label: String @doc(description: "The rule's store label. Null when the rule has none.")
 }
 
 type StoreConfig {

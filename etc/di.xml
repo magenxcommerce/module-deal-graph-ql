@@ -26,4 +26,14 @@
         <plugin name="magenx_deal_assign_first_order_group"
                 type="Magenx\DealGraphQl\Plugin\AssignFirstOrderGroup"/>
     </type>
+    <!-- Gift deals: persist the gift fields from the Cart Price Rule form, and
+         keep a cart's gift lines in step with the rules on every cart save. -->
+    <type name="Magento\SalesRule\Model\Rule">
+        <plugin name="magenx_deal_persist_gift_fields"
+                type="Magenx\DealGraphQl\Plugin\Gift\PersistGiftFields"/>
+    </type>
+    <type name="Magento\Quote\Api\CartRepositoryInterface">
+        <plugin name="magenx_deal_sync_gifts"
+                type="Magenx\DealGraphQl\Plugin\Gift\SyncGiftsOnCartSave"/>
+    </type>
 </config>

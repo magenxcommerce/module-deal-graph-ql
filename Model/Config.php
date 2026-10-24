@@ -13,8 +13,9 @@ use Magento\Store\Model\ScopeInterface;
  * Typed access to the magenx_deal/* store configuration.
  *
  * Conditions, actions, pricing and schedule live on the native Catalog Price
- * Rules (see {@see DealProvider}); this config carries the feature toggle, the
- * deals-page cap, and the first-order customer-group automation settings.
+ * Rules (see {@see DealProvider}) and Cart Price Rules (gift deals); this config
+ * carries the feature toggles, the deals-page cap, and the first-order
+ * customer-group automation settings.
  */
 class Config
 {
@@ -25,6 +26,8 @@ class Config
     private const XML_PATH_FIRST_ORDER_NEW_GROUP = 'magenx_deal/first_order/new_customer_group';
     private const XML_PATH_FIRST_ORDER_RESTORE_GROUP = 'magenx_deal/first_order/restore_group';
     private const XML_PATH_FIRST_ORDER_DEFAULT_GROUP = 'magenx_deal/first_order/default_group';
+
+    private const XML_PATH_GIFT_ENABLED = 'magenx_deal/gift/enabled';
 
     private const DEFAULT_COUNT = 48;
     private const DEFAULT_GENERAL_GROUP = 1;
@@ -129,5 +132,17 @@ class Config
         );
 
         return $value > 0 ? $value : self::DEFAULT_GENERAL_GROUP;
+    }
+
+    /**
+     * Whether gift deals (a free product added by a Cart Price Rule) are on.
+     * Independent of the main deals toggle, and off by default.
+     *
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isGiftEnabled(?int $storeId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_GIFT_ENABLED, ScopeInterface::SCOPE_STORE, $storeId);
     }
 }

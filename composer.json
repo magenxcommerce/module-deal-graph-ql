@@ -1,6 +1,6 @@
 {
     "name": "magenxcommerce/module-deal-graph-ql",
-    "description": "Extends Magento Catalog Price Rules with a merchandising deal label + type (deal / first-order) and exposes them over GraphQL: a `deals` query, a per-product `deal` badge (label, type, authoritative deal price from the rule, schedule/countdown) for grids and the PDP, and a `deals_enabled` store-config flag. The Catalog Price Rule is the single source of truth for conditions, actions and pricing; this module only adds the presentation on top.",
+    "description": "Extends Magento Catalog Price Rules with a merchandising deal label + type (deal / first-order) and exposes them over GraphQL: a `deals` query, a per-product `deal` badge (label, type, authoritative deal price from the rule, schedule/countdown) for grids and the PDP, and a `deals_enabled` store-config flag. Gift deals: a Cart Price Rule with a gift SKU adds that product to the cart at price 0 while the rule applies (`giftDeals` query, `CartItemInterface.deal_gift`). The Catalog Price Rule is the single source of truth for conditions, actions and pricing; this module only adds the presentation on top.",
     "config": {
         "sort-packages": true
     },
@@ -14,7 +14,10 @@
         "magento/module-config": "*",
         "magento/module-customer": "*",
         "magento/module-graph-ql": "*",
+        "magento/module-quote": "*",
+        "magento/module-quote-graph-ql": "*",
         "magento/module-sales": "*",
+        "magento/module-sales-rule": "*",
         "magento/module-store": "*",
         "magento/module-store-graph-ql": "*",
         "magento/module-ui": "*"

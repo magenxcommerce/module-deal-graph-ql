@@ -129,6 +129,41 @@ before ordering (a guest who registers at checkout won't see it — their cart w
 priced as a guest). A cancelled/refunded order does not re-add the group.
 Existing zero-order customers are not back-filled (forward-only). Off by default.
 
+## Gift deals (free gift with a Cart Price Rule)
+
+A **Cart Price Rule** with a **Free Gift SKU** (and optional **Free Gift
+Quantity**, default 1) adds that product to the cart at price 0 while the rule
+applies, and removes it again when the rule stops applying — the subtotal drops,
+the qualifying product is removed, the coupon is taken off. The rule owns the
+conditions, schedule, website/customer-group scope and coupon; this module never
+evaluates conditions itself, it reads the quote's `applied_rule_ids` after Magento
+has collected the totals.
+
+- **How it runs.** A `beforeSave` plugin on `CartRepositoryInterface` syncs the
+  gift lines on every cart save (adding, updating or removing items, applying a
+  coupon, setting an address — GraphQL, REST and Luma alike), so the gift line is
+  saved in the same write. With gift deals off, or no rule carrying a gift SKU,
+  the plugin returns before doing anything. A gift failure (unknown SKU, out of
+  stock, a configurable product) is logged and skipped; it never fails the cart.
+- **The gift line.** An ordinary quote item with the `magenx_deal_gift_rule`
+  option (the rule id) and a custom price of 0, so it is its own line even when
+  the same product is also bought, and it reaches the order as a 0-priced line.
+  Only simple, virtual and downloadable products can be gifts. Its quantity is
+  the rule's: a changed quantity is put back on the next save.
+- **Removable.** If the shopper removes the gift, the rule id is recorded on the
+  quote (`quote.magenx_declined_gift_rules`) and the gift is not re-added to that
+  cart.
+- **Rule setup.** Leave the rule's *Actions* conditions empty (so it applies to
+  the cart) and give it the discount you want, or none. Give it a store label —
+  that is the text the storefront shows, e.g. "Free tote bag with orders over €50".
+- **GraphQL.** `CartItemInterface.deal_gift { rule_id label }` marks the gift
+  line. `giftDeals` lists the gift rules live now without a coupon for the
+  request's website + customer group (coupon rules are never advertised), each
+  with its gift `product`, `gift_qty`, `label` and `ends_at`.
+
+Off by default: **Stores → Configuration → Magenx → Deals → Gift Deals**. Turning
+it off removes any gift still in a cart on that cart's next change.
+
 ## Requirements
 
 - The **Catalog Price Rule index must have run** (rule save reindexes it; or
@@ -147,6 +182,10 @@ Existing zero-order customers are not back-filled (forward-only). Off by default
   customer-group automation described above (off by default).
 - **Marketing → Catalog Price Rules → (a rule) → Deal Display**: set the label +
   type to turn that rule into a deal.
+- **Stores → Configuration → Magenx → Deals → Gift Deals**: enable gift deals
+  (off by default).
+- **Marketing → Cart Price Rules → (a rule) → Free Gift SKU / Quantity**: turn
+  that rule into a gift deal.
 
 ## Install
 

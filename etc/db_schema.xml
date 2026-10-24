@@ -17,4 +17,20 @@
         <column xsi:type="varchar" name="magenx_deal_type" nullable="true" length="32"
                 comment="Magenx deal type: deal|first_order"/>
     </table>
+    <!-- Gift deals: a Cart Price Rule with a gift SKU adds that product to the
+         cart at price 0 while the rule applies (see Model\Gift\GiftSync). The
+         rule keeps owning conditions, schedule, scope and coupon; the label
+         shown is the rule's own store label. -->
+    <table name="salesrule" resource="default">
+        <column xsi:type="varchar" name="magenx_gift_sku" nullable="true" length="64"
+                comment="Magenx gift deal: SKU added free while the rule applies (empty = no gift)"/>
+        <column xsi:type="smallint" name="magenx_gift_qty" unsigned="true" nullable="true"
+                comment="Magenx gift deal: quantity of the gift"/>
+    </table>
+    <!-- Gift rules the shopper removed from this cart: not re-added while the
+         cart lives. Comma-separated rule ids. -->
+    <table name="quote" resource="checkout">
+        <column xsi:type="varchar" name="magenx_declined_gift_rules" nullable="true" length="255"
+                comment="Magenx gift deal: rule ids whose gift the shopper removed"/>
+    </table>
 </schema>

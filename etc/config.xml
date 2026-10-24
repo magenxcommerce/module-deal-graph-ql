@@ -16,6 +16,9 @@
                 <restore_group>1</restore_group>
                 <default_group>1</default_group>
             </first_order>
+            <gift>
+                <enabled>0</enabled>
+            </gift>
         </magenx_deal>
     </default>
 </config>

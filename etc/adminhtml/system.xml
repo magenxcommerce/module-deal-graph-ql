@@ -62,6 +62,15 @@
                     </depends>
                 </field>
             </group>
+            <group id="gift" translate="label" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Gift Deals (Free Gift with a Cart Price Rule)</label>
+                <comment><![CDATA[Set a <b>Free Gift SKU</b> on a <a href="../sales_rule/">Cart Price Rule</a> and, while that rule applies to a cart, the product is added at price 0 and removed again when the rule stops applying. The rule owns the conditions (e.g. subtotal, products in cart), schedule, website/customer-group scope and coupon; its store label is shown as the gift's label. Leave the rule's <i>Actions</i> conditions empty so it applies to the cart. The shopper may remove the gift; it is then not re-added to that cart. Only simple, virtual and downloadable products can be gifts.]]></comment>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Gift Deals</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Off: gift SKUs on rules are ignored and any gift already in a cart is removed on its next change.</comment>
+                </field>
+            </group>
         </section>
     </system>
 </config>
